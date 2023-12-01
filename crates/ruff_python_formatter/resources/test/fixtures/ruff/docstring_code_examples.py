@@ -344,3 +344,89 @@ def doctest_invalid_skipped_with_triple_double_in_single_quote_string():
     >>> x        =      '\"\"\"'
     """
     pass
+
+
+###############################################################################
+# reStructuredText CODE EXAMPLES
+#
+# This section shows examples of docstrings that contain code snippets in
+# reStructuredText formatted code blocks.
+#
+# See: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#literal-blocks
+# See: https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-code-block
+# See: https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#literal-blocks
+# See: https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#toc-entry-30
+# See: https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#toc-entry-38
+###############################################################################
+
+
+def rst_literal_simple():
+    """
+    Do cool stuff::
+
+        cool_stuff( 1 )
+
+    Done.
+    """
+    pass
+
+
+def rst_literal_simple_continued():
+    """
+    Do cool stuff::
+
+        def cool_stuff( x ):
+            print( f"hi {x}" );
+
+    Done.
+    """
+    pass
+
+
+# Tests that we can end the literal block on the second
+# to last line of the docstring.
+def rst_literal_second_to_last():
+    """
+    Do cool stuff::
+
+        cool_stuff( 1 )
+    """
+    pass
+
+
+# Tests that we can end the literal block on the actual
+# last line of the docstring.
+def rst_literal_actually_last():
+    """
+    Do cool stuff::
+
+        cool_stuff( 1 )"""
+    pass
+
+
+def rst_literal_with_blank_lines():
+    """
+    Do cool stuff::
+
+        def cool_stuff( x ):
+            print( f"hi {x}" );
+
+        def other_stuff( y ):
+            print(    y     )
+
+    Done.
+    """
+    pass
+
+
+def rst_literal_extra_blanks():
+    """
+    Do cool stuff::
+
+
+        cool_stuff( 1 )
+
+
+    Done.
+    """
+    pass

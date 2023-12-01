@@ -328,6 +328,14 @@ impl<'ast, 'buf, 'fmt, 'src> DocstringLinePrinter<'ast, 'buf, 'fmt, 'src> {
                                 )?;
                             }
                         }
+                        CodeExampleKind::RstLiteralBlock(litblock) => {
+                            let Some(indent) = litblock.min_indent else {
+                                continue;
+                            };
+                            for docline in formatted_lines {
+                                self.print_one(docline.map(|line| std::format!("{indent}{line}")))?;
+                            }
+                        }
                     }
                 }
             }
@@ -612,6 +620,13 @@ impl<'src> CodeExample<'src> {
                 };
                 self.kind = Some(CodeExampleKind::Doctest(doctest));
             }
+            Some(CodeExampleKind::RstLiteralBlock(litblock)) => {
+                let Some(litblock) = litblock.add_code_line(original, queue) else {
+                    self.add_start(original, queue);
+                    return;
+                };
+                self.kind = Some(CodeExampleKind::RstLiteralBlock(litblock));
+            }
         }
     }
 
@@ -642,6 +657,9 @@ impl<'src> CodeExample<'src> {
         if let Some(doctest) = CodeExampleDoctest::new(original) {
             self.kind = Some(CodeExampleKind::Doctest(doctest));
             queue.push_back(CodeExampleAddAction::Kept);
+        } else if let Some(litblock) = CodeExampleRstLiteralBlock::new(original) {
+            self.kind = Some(CodeExampleKind::RstLiteralBlock(litblock));
+            queue.push_back(CodeExampleAddAction::Print { original });
         } else {
             queue.push_back(CodeExampleAddAction::Print { original });
         }
@@ -662,6 +680,10 @@ enum CodeExampleKind<'src> {
     ///
     /// [regex matching]: https://github.com/python/cpython/blob/0ff6368519ed7542ad8b443de01108690102420a/Lib/doctest.py#L611-L622
     Doctest(CodeExampleDoctest<'src>),
+    /// Code found from a reStructuredText "[literal block]."
+    ///
+    /// [literal block]: https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#literal-blocks
+    RstLiteralBlock(CodeExampleRstLiteralBlock<'src>),
 }
 
 impl<'src> CodeExampleKind<'src> {
@@ -672,6 +694,7 @@ impl<'src> CodeExampleKind<'src> {
     fn code(&mut self) -> &[CodeExampleLine<'src>] {
         match *self {
             CodeExampleKind::Doctest(ref doctest) => &doctest.lines,
+            CodeExampleKind::RstLiteralBlock(ref mut litblock) => litblock.code(),
         }
     }
 
@@ -684,6 +707,7 @@ impl<'src> CodeExampleKind<'src> {
     fn into_code(self) -> Vec<CodeExampleLine<'src>> {
         match self {
             CodeExampleKind::Doctest(doctest) => doctest.lines,
+            CodeExampleKind::RstLiteralBlock(litblock) => litblock.lines,
         }
     }
 }
@@ -772,6 +796,221 @@ impl<'src> CodeExampleDoctest<'src> {
         CodeExampleAddAction::Format {
             kind: CodeExampleKind::Doctest(self),
         }
+    }
+}
+
+/// State corresponding to a single reStructuredText literal block.
+#[derive(Debug)]
+struct CodeExampleRstLiteralBlock<'src> {
+    /// The lines that have been seen so far that make up the literal block.
+    lines: Vec<CodeExampleLine<'src>>,
+    /// The indent of the line containing the trailing `::`.
+    ///
+    /// An rst literal block needs to be indented more than the line ending
+    /// with a `::`, so we use this indentation to look for indentation that is
+    /// "more than" it.
+    colon_indent: &'src str,
+    /// The minimum indent of the literal block.
+    ///
+    /// This is `None` until the first such line is seen. If no such line is
+    /// found, then we consider it an invalid literal block and bail out of
+    /// trying to find a code snippet. Otherwise, we update this indentation
+    /// as we see lines in the literal block with less indentation. (Usually,
+    /// the minimum is the indentation of the first block, but this is not
+    /// required.)
+    ///
+    /// By construction, all lines part of the literal block must have at least
+    /// this indentation. Additionally, it is guaranteed that the indentation
+    /// length of the colon indent is strictly less than the indentation of the
+    /// minimum indent. Namely, the literal block ends once we find a line that
+    /// has been unindented to at most the indent of the colon line.
+    min_indent: Option<&'src str>,
+}
+
+impl<'src> CodeExampleRstLiteralBlock<'src> {
+    /// Looks for the start of a reStructuredText [literal block].
+    ///
+    /// Essentially, these occur whenever a line ends with a `::`, except when
+    /// a line begins with a `..`, since that indicates a reST directive.
+    ///
+    /// If the start of a literal block is found, then this returns a correctly
+    /// initialized reStructuredText literal block. Callers should print the
+    /// line as given as it is not retained as part of the block.
+    ///
+    /// [literal block]: https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#literal-blocks
+    fn new(original: InputDocstringLine<'src>) -> Option<CodeExampleRstLiteralBlock> {
+        let (colon_indent, rest) = indent_with_suffix(original.line);
+        if !rest.trim_end().ends_with("::") {
+            return None;
+        }
+        if rest.starts_with("..") {
+            return None;
+        }
+        Some(CodeExampleRstLiteralBlock {
+            lines: vec![],
+            colon_indent,
+            min_indent: None,
+        })
+    }
+
+    fn code(&mut self) -> &[CodeExampleLine<'src>] {
+        let Some(min_indent) = self.min_indent else {
+            return &[];
+        };
+        for line in self.lines.iter_mut() {
+            line.code = if line.original.line.trim().is_empty() {
+                ""
+            } else {
+                assert!(
+                    line.original.line.starts_with(min_indent),
+                    "each line must have a mininum indent"
+                );
+                &line.original.line[min_indent.len()..]
+            };
+        }
+        &self.lines
+    }
+
+    fn add_code_line(
+        mut self,
+        original: InputDocstringLine<'src>,
+        queue: &mut VecDeque<CodeExampleAddAction<'src>>,
+    ) -> Option<CodeExampleRstLiteralBlock<'src>> {
+        // If we haven't started populating the minimum indent yet, then
+        // we haven't found the first code line and may need to find and
+        // pass through leading empty lines.
+        let Some(min_indent) = self.min_indent else {
+            return self.add_first_line(original, queue);
+        };
+        let (indent, rest) = indent_with_suffix(original.line);
+        if rest.is_empty() {
+            // This is the standard way we close a block: when we see
+            // an empty line followed by an unindented line.
+            if let Some(next) = original.next {
+                let (next_indent, _) = indent_with_suffix(next);
+                if indentation_length(next_indent) <= indentation_length(self.colon_indent) {
+                    queue.push_back(self.into_format_action());
+                    return None;
+                }
+            } else {
+                queue.push_back(self.into_format_action());
+                return None;
+            }
+            self.push(original);
+            queue.push_back(CodeExampleAddAction::Kept);
+            return Some(self);
+        }
+        // To avoid degenerate cases, if the indentation is not a literal
+        // proper prefix of the indentation of the colon line, then bail.
+        if !is_proper_prefix(self.colon_indent, original.line) {
+            queue.push_back(self.into_reset_action());
+            return None;
+        }
+        if indentation_length(indent) <= indentation_length(self.colon_indent) {
+            // If we find an unindented non-empty line at the same (or less)
+            // indentation of the initial colon at this point, then we know it
+            // must be wrong because we didn't see it immediately following an
+            // empty line.
+            queue.push_back(self.into_reset_action());
+            return None;
+        } else if indentation_length(indent) < indentation_length(min_indent) {
+            // Here, we found an indentation that is less than our minimum
+            // indent, so we need to update our minimum indent... unless,
+            // the new indent is not a proper prefix of the existing minimum
+            // indent, in which case, this is probably a bad literal block. So
+            // give up. (This case implies there is mixed indentation.)
+            if !is_proper_prefix(indent, min_indent) {
+                queue.push_back(self.into_reset_action());
+                return None;
+            }
+            self.min_indent = Some(indent);
+        } else if !indent.starts_with(min_indent) {
+            queue.push_back(self.into_reset_action());
+            return None;
+        }
+        self.push(original);
+        queue.push_back(CodeExampleAddAction::Kept);
+        Some(self)
+    }
+
+    /// Looks for the first line in the literal block.
+    ///
+    /// If a first line is found, then this returns true. Otherwise, an empty
+    /// line has been found and the caller should pass it through to the
+    /// docstring unchanged. (Empty lines are allowed to precede a literal
+    /// block. And there must be at least one of them.)
+    ///
+    /// If the given line is invalid for a reStructuredText literal block
+    /// (i.e., no empty lines seen between the starting double colon), then an
+    /// error variant is returned. In this case, callers should bail out of
+    /// parsing this code example.
+    ///
+    /// When this returns `true`, it is guaranteed that `self.min_indent` is
+    /// set to a non-None value.
+    ///
+    /// # Panics
+    ///
+    /// Callers must only call this when the first indentation has not yet been
+    /// found. If it has, then this panics.
+    fn add_first_line(
+        mut self,
+        original: InputDocstringLine<'src>,
+        queue: &mut VecDeque<CodeExampleAddAction<'src>>,
+    ) -> Option<CodeExampleRstLiteralBlock<'src>> {
+        assert!(self.min_indent.is_none());
+
+        // While the rst spec isn't completely clear on this point, through
+        // experimentation, I found that multiple empty lines before the first
+        // non-empty line are ignored.
+        let (min_indent, rest) = indent_with_suffix(original.line);
+        if rest.is_empty() {
+            queue.push_back(CodeExampleAddAction::Print { original });
+            return Some(self);
+        }
+        // At this point, we found a non-empty line. The only thing we require
+        // is that its indentation is strictly greater than the indentation of
+        // the line containing the `::`. Otherwise, we treat this as an invalid
+        // literal block and bail.
+        if indentation_length(min_indent) <= indentation_length(&self.colon_indent) {
+            queue.push_back(self.into_reset_action());
+            return None;
+        }
+        // To avoid degenerate cases, if the indentation is not a literal
+        // proper prefix of the indentation of the colon line, then bail.
+        if !is_proper_prefix(self.colon_indent, original.line) {
+            queue.push_back(self.into_reset_action());
+            return None;
+        }
+        self.min_indent = Some(min_indent);
+        self.push(original);
+        queue.push_back(CodeExampleAddAction::Kept);
+        Some(self)
+    }
+
+    /// Pushes the given line as part of this code example.
+    fn push(&mut self, original: InputDocstringLine<'src>) {
+        // N.B. We record the code portion as identical to the original line.
+        // When we go to reformat the code lines, we change them by removing
+        // the `min_indent`. This design is necessary because the true value of
+        // `min_indent` isn't known until the entire block has been parsed.
+        let code = original.line;
+        self.lines.push(CodeExampleLine { original, code });
+    }
+
+    /// Consume this literal block and turn it into a formatting action.
+    fn into_format_action(self) -> CodeExampleAddAction<'src> {
+        CodeExampleAddAction::Format {
+            kind: CodeExampleKind::RstLiteralBlock(self),
+        }
+    }
+
+    /// Consume this literal block and turn it into a reset action.
+    ///
+    /// This occurs when we started collecting a code example from something
+    /// that looked like a literal block, but later determined that it wasn't a
+    /// valid literal block.
+    fn into_reset_action(self) -> CodeExampleAddAction<'src> {
+        CodeExampleAddAction::Reset { code: self.lines }
     }
 }
 
@@ -897,6 +1136,23 @@ fn indentation_length(line: &str) -> TextSize {
         }
     }
     TextSize::new(indentation)
+}
+
+/// Returns the indentation of the given line and all everything following it.
+fn indent_with_suffix(line: &str) -> (&str, &str) {
+    let suffix = line.trim_start();
+    let indent_len = line
+        .len()
+        .checked_sub(suffix.len())
+        .expect("suffix <= line");
+    let indent = &line[..indent_len];
+    (indent, suffix)
+}
+
+/// Returns true if and only if the given prefix is a proper prefix of the
+/// given haystack.
+fn is_proper_prefix(prefix: &str, haystack: &str) -> bool {
+    prefix.len() < haystack.len() && prefix == &haystack[..prefix.len()]
 }
 
 #[cfg(test)]
