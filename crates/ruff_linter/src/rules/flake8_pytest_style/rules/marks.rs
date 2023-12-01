@@ -134,7 +134,7 @@ fn pytest_mark_parentheses(
 }
 
 fn check_mark_parentheses(checker: &mut Checker, decorator: &Decorator, marker: &str) {
-    match &decorator.expression {
+    match decorator.expression.as_ref() {
         Expr::Call(ast::ExprCall {
             func,
             arguments:
@@ -167,7 +167,7 @@ fn check_useless_usefixtures(checker: &mut Checker, decorator: &Decorator, marke
         return;
     }
 
-    match &decorator.expression {
+    match decorator.expression.as_ref() {
         // @pytest.mark.usefixtures
         Expr::Attribute(..) => {}
         // @pytest.mark.usefixtures(...)

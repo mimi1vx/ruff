@@ -439,7 +439,7 @@ fn match_case<'stmt>(
 /// Returns true if `pattern` is a wildcard (`_`) pattern.
 fn is_wildcard(pattern: &MatchCase) -> bool {
     pattern.guard.is_none()
-        && matches!(&pattern.pattern, Pattern::MatchAs(PatternMatchAs { pattern, name, .. }) if pattern.is_none() && name.is_none())
+        && matches!(pattern.pattern.as_ref(), Pattern::MatchAs(PatternMatchAs { pattern, name, .. }) if pattern.is_none() && name.is_none())
 }
 
 #[derive(Debug, Default)]

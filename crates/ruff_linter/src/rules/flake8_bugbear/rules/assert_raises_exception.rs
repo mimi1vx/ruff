@@ -82,7 +82,7 @@ pub(crate) fn assert_raises_exception(checker: &mut Checker, items: &[WithItem])
             func,
             arguments,
             range: _,
-        }) = &item.context_expr
+        }) = item.context_expr.as_ref()
         else {
             return;
         };

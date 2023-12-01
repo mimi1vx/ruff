@@ -198,7 +198,7 @@ pub(crate) fn complex_raises(
     items: &[WithItem],
     body: &[Stmt],
 ) {
-    let raises_called = items.iter().any(|item| match &item.context_expr {
+    let raises_called = items.iter().any(|item| match item.context_expr.as_ref() {
         Expr::Call(ast::ExprCall { func, .. }) => is_pytest_raises(func, checker.semantic()),
         _ => false,
     });

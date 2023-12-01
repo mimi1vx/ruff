@@ -132,7 +132,7 @@ pub(crate) fn non_pep695_type_alias(checker: &mut Checker, stmt: &StmtAnnAssign)
         checker.generator().stmt(&Stmt::from(StmtTypeAlias {
             range: TextRange::default(),
             name: target.clone(),
-            type_params,
+            type_params: type_params.map(Box::new),
             value: value.clone(),
         })),
         stmt.range(),

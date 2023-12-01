@@ -90,7 +90,7 @@ pub(crate) fn unnecessary_dict_comprehension(
     if !generator.ifs.is_empty() || generator.is_async {
         return;
     }
-    let Expr::Tuple(ast::ExprTuple { elts, .. }) = &generator.target else {
+    let Expr::Tuple(ast::ExprTuple { elts, .. }) = generator.target.as_ref() else {
         return;
     };
     let [target_key, target_value] = elts.as_slice() else {

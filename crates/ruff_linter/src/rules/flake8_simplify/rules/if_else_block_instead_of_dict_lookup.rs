@@ -104,7 +104,7 @@ pub(crate) fn if_else_block_instead_of_dict_lookup(checker: &mut Checker, stmt_i
             return;
         };
 
-        match test.as_ref() {
+        match test.as_deref() {
             // `else`
             None => {
                 // The else must also be a single effect-free return statement

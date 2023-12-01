@@ -1,6 +1,6 @@
 use ruff_diagnostics::{AlwaysFixableViolation, Diagnostic, Edit, Fix};
 use ruff_macros::{derive_message_formats, violation};
-use ruff_python_ast::{self as ast, Expr, Parameter, ParameterWithDefault, Stmt};
+use ruff_python_ast::{self as ast, Expr, ParameterWithDefault, Stmt};
 use ruff_text_size::{Ranged, TextSize};
 
 use crate::checkers::ast::Checker;
@@ -90,15 +90,10 @@ pub(crate) fn super_call_with_parameters(checker: &mut Checker, call: &ast::Expr
     };
 
     // Extract the name of the first argument to the enclosing function.
-    let Some(ParameterWithDefault {
-        parameter: Parameter {
-            name: parent_arg, ..
-        },
-        ..
-    }) = parent_parameters.args.first()
-    else {
+    let Some(ParameterWithDefault { parameter, .. }) = parent_parameters.args.first() else {
         return;
     };
+    let parent_arg = &parameter.name;
 
     // Find the enclosing class definition (if any).
     let Some(Stmt::ClassDef(ast::StmtClassDef {

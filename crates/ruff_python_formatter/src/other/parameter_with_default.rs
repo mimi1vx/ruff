@@ -36,7 +36,7 @@ impl FormatNodeRule<ParameterWithDefault> for FormatParameterWithDefault {
             //     )
             // )
             // ```
-            let needs_line_break_trailing = f.context().comments().has_trailing(parameter);
+            let needs_line_break_trailing = f.context().comments().has_trailing(parameter.as_ref());
             let default_first_comment = f.context().comments().leading(default.as_ref()).first();
             let needs_line_break_leading = default_first_comment.is_some_and(|default_leading_comment| {
                 let mut tokenizer = SimpleTokenizer::new(

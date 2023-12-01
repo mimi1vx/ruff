@@ -687,7 +687,7 @@ fn pytest_fixture_parentheses(
 
 /// PT001, PT002, PT003
 fn check_fixture_decorator(checker: &mut Checker, func_name: &str, decorator: &Decorator) {
-    match &decorator.expression {
+    match decorator.expression.as_ref() {
         Expr::Call(ast::ExprCall {
             func,
             arguments,

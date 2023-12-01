@@ -628,7 +628,7 @@ pub(crate) fn parametrize(checker: &mut Checker, decorators: &[Decorator]) {
             if let Expr::Call(ast::ExprCall {
                 arguments: Arguments { args, .. },
                 ..
-            }) = &decorator.expression
+            }) = decorator.expression.as_ref()
             {
                 if checker.enabled(Rule::PytestParametrizeNamesWrongType) {
                     if let [names, ..] = args.as_slice() {

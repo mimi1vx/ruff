@@ -66,7 +66,7 @@ pub(crate) fn lru_cache_with_maxsize_none(checker: &mut Checker, decorator_list:
                     range: _,
                 },
             range: _,
-        }) = &decorator.expression
+        }) = decorator.expression.as_ref()
         else {
             continue;
         };

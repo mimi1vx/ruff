@@ -111,7 +111,7 @@ impl<'a> ClauseHeader<'a> {
                 body: _,
             }) => {
                 if let Some(type_params) = type_params.as_ref() {
-                    visit(type_params, visitor);
+                    visit(type_params.as_ref(), visitor);
                 }
                 visit(parameters.as_ref(), visitor);
 
@@ -133,7 +133,7 @@ impl<'a> ClauseHeader<'a> {
                 body: _,
             }) => {
                 if let Some(test) = test.as_ref() {
-                    visit(test, visitor);
+                    visit(test.as_ref(), visitor);
                 }
             }
 
@@ -160,7 +160,7 @@ impl<'a> ClauseHeader<'a> {
                 range: _,
                 body: _,
             }) => {
-                visit(pattern, visitor);
+                visit(pattern.as_ref(), visitor);
 
                 if let Some(guard) = guard.as_deref() {
                     visit(guard, visitor);

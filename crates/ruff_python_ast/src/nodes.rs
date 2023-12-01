@@ -179,7 +179,7 @@ pub struct StmtFunctionDef {
     pub is_async: bool,
     pub decorator_list: Vec<Decorator>,
     pub name: Identifier,
-    pub type_params: Option<TypeParams>,
+    pub type_params: Option<Box<TypeParams>>,
     pub parameters: Box<Parameters>,
     pub returns: Option<Box<Expr>>,
     pub body: Vec<Stmt>,
@@ -257,7 +257,7 @@ impl From<StmtDelete> for Stmt {
 pub struct StmtTypeAlias {
     pub range: TextRange,
     pub name: Box<Expr>,
-    pub type_params: Option<TypeParams>,
+    pub type_params: Option<Box<TypeParams>>,
     pub value: Box<Expr>,
 }
 
@@ -367,7 +367,7 @@ impl From<StmtIf> for Stmt {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ElifElseClause {
     pub range: TextRange,
-    pub test: Option<Expr>,
+    pub test: Option<Box<Expr>>,
     pub body: Vec<Stmt>,
 }
 
@@ -2477,8 +2477,8 @@ impl std::cmp::PartialEq<CmpOp> for CmpOpNotIn {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Comprehension {
     pub range: TextRange,
-    pub target: Expr,
-    pub iter: Expr,
+    pub target: Box<Expr>,
+    pub iter: Box<Expr>,
     pub ifs: Vec<Expr>,
     pub is_async: bool,
 }
@@ -2532,7 +2532,7 @@ pub struct Alias {
 #[derive(Clone, Debug, PartialEq)]
 pub struct WithItem {
     pub range: TextRange,
-    pub context_expr: Expr,
+    pub context_expr: Box<Expr>,
     pub optional_vars: Option<Box<Expr>>,
 }
 
@@ -2540,7 +2540,7 @@ pub struct WithItem {
 #[derive(Clone, Debug, PartialEq)]
 pub struct MatchCase {
     pub range: TextRange,
-    pub pattern: Pattern,
+    pub pattern: Box<Pattern>,
     pub guard: Option<Box<Expr>>,
     pub body: Vec<Stmt>,
 }
@@ -2645,7 +2645,7 @@ pub struct PatternArguments {
 pub struct PatternKeyword {
     pub range: TextRange,
     pub attr: Identifier,
-    pub pattern: Pattern,
+    pub pattern: Box<Pattern>,
 }
 
 /// See also [MatchStar](https://docs.python.org/3/library/ast.html#ast.MatchStar)
@@ -2740,7 +2740,7 @@ impl From<TypeParamTypeVarTuple> for TypeParam {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Decorator {
     pub range: TextRange,
-    pub expression: Expr,
+    pub expression: Box<Expr>,
 }
 
 /// An alternative type of AST `arguments`. This is ruff_python_parser-friendly and human-friendly definition of function arguments.
@@ -2815,7 +2815,7 @@ impl Parameters {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ParameterWithDefault {
     pub range: TextRange,
-    pub parameter: Parameter,
+    pub parameter: Box<Parameter>,
     pub default: Option<Box<Expr>>,
 }
 
@@ -3939,8 +3939,8 @@ mod size_assertions {
     #[allow(clippy::wildcard_imports)]
     use super::*;
 
-    assert_eq_size!(Stmt, [u8; 144]);
-    assert_eq_size!(StmtFunctionDef, [u8; 144]);
+    assert_eq_size!(Stmt, [u8; 120]);
+    assert_eq_size!(StmtFunctionDef, [u8; 120]);
     assert_eq_size!(StmtClassDef, [u8; 104]);
     assert_eq_size!(StmtTry, [u8; 112]);
     assert_eq_size!(Expr, [u8; 80]);

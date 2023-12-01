@@ -1,5 +1,5 @@
 // auto-generated: "lalrpop 0.20.0"
-// sha3: ac7bd3ff83714c50bfa5d3ba21b3a10b1faff6eb045b63c933a497a2025d7526
+// sha3: cc50d523718f1068854f66da7a06de0e612ffb9460ba89cda3830431bb997b11
 use ruff_text_size::{Ranged, TextLen, TextRange, TextSize};
 use ruff_python_ast::{self as ast, Int, IpyEscapeKind};
 use crate::{
@@ -34010,7 +34010,7 @@ fn __action88<
         // SAFETY: `body` is never empty because it is non-optional and `Suite` matches one or more statements.
         let end = body.last().unwrap().end();
         ast::MatchCase {
-            pattern,
+            pattern: Box::new(pattern),
             guard: guard.map(Box::new),
             body,
             range: (start..end).into()
@@ -34887,7 +34887,7 @@ fn __action139<
 {
     ast::PatternKeyword {
         attr,
-        pattern,
+        pattern: Box::new(pattern),
         range: (location..end_location).into()
     }
 }
@@ -35044,7 +35044,7 @@ fn __action146<
     {
         let elif_else_clauses: Vec<_> = s2.into_iter().map(|(start, test, body)| ast::ElifElseClause {
             range: (start..body.last().unwrap().end()).into(),
-            test: Some(test.into()),
+            test: Some(Box::new(test.into())),
             body,
         }).chain(s3.into_iter().map(|(start, body)| ast::ElifElseClause {
             range: (start..body.last().unwrap().end()).into(),
@@ -35407,7 +35407,7 @@ fn __action159<
         // ```
         // In this case, the `(` and `)` are part of the `with` statement.
         // The same applies to `yield` and `yield from`.
-        let item = if item.optional_vars.is_none() && matches!(item.context_expr, ast::Expr::NamedExpr(_) | ast::Expr::Yield(_) | ast::Expr::YieldFrom(_)) {
+        let item = if item.optional_vars.is_none() && matches!(item.context_expr.as_ref(), ast::Expr::NamedExpr(_) | ast::Expr::Yield(_) | ast::Expr::YieldFrom(_)) {
             ast::WithItem {
                 range: item.range().add_start(TextSize::new(1)).sub_end(TextSize::new(1)),
                 context_expr: item.context_expr,
@@ -35447,7 +35447,7 @@ fn __action161<
     {
         all.into_iter().map(|context_expr| ast::WithItem {
             range: context_expr.range(),
-            context_expr: context_expr.into(),
+            context_expr: Box::new(context_expr.into()),
             optional_vars: None,
         }).collect()
     }
@@ -35469,7 +35469,7 @@ fn __action162<
     {
         let optional_vars = Some(Box::new(set_context(optional_vars.into(), ast::ExprContext::Store)));
         ast::WithItem {
-            context_expr: context_expr.into(),
+            context_expr: Box::new(context_expr.into()),
             optional_vars,
             range: (location..end_location).into(),
         }
@@ -35504,7 +35504,7 @@ fn __action163<
             body,
             decorator_list,
             returns,
-            type_params,
+            type_params: type_params.map(Box::new),
             is_async: is_async.is_some(),
             range: (location..end_location).into(),
         }.into()
@@ -35549,7 +35549,7 @@ fn __action165<
             ast::StmtTypeAlias {
                 name: Box::new(name),
                 value: Box::new(value.into()),
-                type_params,
+                type_params: type_params.map(Box::new),
                 range: (location..end_location).into()
             },
         )
@@ -35595,7 +35595,7 @@ fn __action167<
 ) -> ast::ParameterWithDefault
 {
     {
-        let parameter = ast::Parameter { name, annotation: None, range: (location..end_location).into() };
+        let parameter = Box::new(ast::Parameter { name, annotation: None, range: (location..end_location).into() });
         ast::ParameterWithDefault { parameter, default: None, range: (location..end_location).into() }
     }
 }
@@ -35628,7 +35628,7 @@ fn __action169<
 {
     {
         let annotation = annotation.map(ast::Expr::from).map(Box::new);
-        let parameter = ast::Parameter { name, annotation, range: (location..end_location).into() };
+        let parameter = Box::new(ast::Parameter { name, annotation, range: (location..end_location).into() });
         ast::ParameterWithDefault { parameter, default: None, range: (location..end_location).into() }
     }
 }
@@ -35793,7 +35793,7 @@ fn __action177<
 ) -> ast::Decorator
 {
     {
-        ast::Decorator { range: (location..end_location).into(), expression: expression.into() }
+        ast::Decorator { range: (location..end_location).into(), expression: Box::new(expression.into()) }
     }
 }
 
@@ -36721,8 +36721,8 @@ fn __action238<
         let is_async = is_async.is_some();
         let ifs = ifs.into_iter().map(ast::Expr::from).collect();
         ast::Comprehension {
-            target: set_context(target.into(), ast::ExprContext::Store),
-            iter: iter.into(),
+            target: Box::new(set_context(target.into(), ast::ExprContext::Store)),
+            iter: Box::new(iter.into()),
             ifs,
             is_async,
             range: (location..end_location).into()
@@ -37948,7 +37948,7 @@ fn __action317<
     {
         ast::WithItem {
             range: context_expr.range(),
-            context_expr: context_expr.into(),
+            context_expr: Box::new(context_expr.into()),
             optional_vars: None,
         }
     }
@@ -38016,7 +38016,7 @@ fn __action322<
     {
         ast::WithItem {
             range: context_expr.range(),
-            context_expr: context_expr.into(),
+            context_expr: Box::new(context_expr.into()),
             optional_vars: None,
         }
     }

@@ -149,7 +149,7 @@ pub(crate) fn is_singledispatch_implementation(
     semantic: &SemanticModel,
 ) -> bool {
     function_def.decorator_list.iter().any(|decorator| {
-        let Expr::Attribute(attribute) = &decorator.expression else {
+        let Expr::Attribute(attribute) = decorator.expression.as_ref() else {
             return false;
         };
 

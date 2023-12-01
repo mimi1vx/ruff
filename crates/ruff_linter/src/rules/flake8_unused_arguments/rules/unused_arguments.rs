@@ -228,7 +228,7 @@ fn function(
         .iter()
         .chain(&parameters.args)
         .chain(&parameters.kwonlyargs)
-        .map(|parameter_with_default| &parameter_with_default.parameter)
+        .map(|parameter_with_default| parameter_with_default.parameter.as_ref())
         .chain(
             iter::once::<Option<&Parameter>>(parameters.vararg.as_deref())
                 .flatten()
@@ -265,7 +265,7 @@ fn method(
         .chain(&parameters.args)
         .chain(&parameters.kwonlyargs)
         .skip(1)
-        .map(|parameter_with_default| &parameter_with_default.parameter)
+        .map(|parameter_with_default| parameter_with_default.parameter.as_ref())
         .chain(
             iter::once::<Option<&Parameter>>(parameters.vararg.as_deref())
                 .flatten()

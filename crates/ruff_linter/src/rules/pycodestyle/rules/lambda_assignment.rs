@@ -198,12 +198,12 @@ fn function(
                 .iter()
                 .enumerate()
                 .map(|(idx, parameter)| ParameterWithDefault {
-                    parameter: Parameter {
+                    parameter: Box::new(Parameter {
                         annotation: arg_types
                             .get(idx)
                             .map(|arg_type| Box::new(arg_type.clone())),
-                        ..parameter.parameter.clone()
-                    },
+                        ..*parameter.parameter.clone()
+                    }),
                     ..parameter.clone()
                 })
                 .collect::<Vec<_>>();
@@ -212,12 +212,12 @@ fn function(
                 .iter()
                 .enumerate()
                 .map(|(idx, parameter)| ParameterWithDefault {
-                    parameter: Parameter {
+                    parameter: Box::new(Parameter {
                         annotation: arg_types
                             .get(idx + new_posonlyargs.len())
                             .map(|arg_type| Box::new(arg_type.clone())),
-                        ..parameter.parameter.clone()
-                    },
+                        ..*parameter.parameter.clone()
+                    }),
                     ..parameter.clone()
                 })
                 .collect::<Vec<_>>();

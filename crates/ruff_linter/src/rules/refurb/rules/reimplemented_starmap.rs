@@ -343,7 +343,7 @@ fn match_comprehension_target(comprehension: &ast::Comprehension) -> Option<Comp
     if comprehension.is_async || !comprehension.ifs.is_empty() {
         return None;
     }
-    match &comprehension.target {
+    match comprehension.target.as_ref() {
         Expr::Tuple(tuple) => Some(ComprehensionTarget::Tuple(tuple)),
         Expr::Name(name) => Some(ComprehensionTarget::Name(name)),
         _ => None,

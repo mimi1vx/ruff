@@ -94,7 +94,7 @@ fn explicit_with_items(checker: &mut Checker, with_items: &[WithItem]) -> bool {
     let [with_item] = with_items else {
         return false;
     };
-    let Expr::Call(expr_call) = &with_item.context_expr else {
+    let Expr::Call(expr_call) = with_item.context_expr.as_ref() else {
         return false;
     };
     checker

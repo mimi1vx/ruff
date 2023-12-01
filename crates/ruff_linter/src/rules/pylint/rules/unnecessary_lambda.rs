@@ -167,7 +167,7 @@ pub(crate) fn unnecessary_lambda(checker: &mut Checker, lambda: &ExprLambda) {
             let lambda_posargs: Vec<&Parameter> = parameters
                 .args
                 .iter()
-                .map(|ParameterWithDefault { parameter, .. }| parameter)
+                .map(|ParameterWithDefault { parameter, .. }| parameter.as_ref())
                 .collect::<Vec<_>>();
             if call_posargs.len() != lambda_posargs.len() {
                 return;

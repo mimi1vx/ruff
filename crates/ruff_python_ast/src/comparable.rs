@@ -174,7 +174,7 @@ impl<'a> From<&'a ast::PatternKeyword> for ComparablePatternKeyword<'a> {
     fn from(keyword: &'a ast::PatternKeyword) -> Self {
         Self {
             attr: keyword.attr.as_str(),
-            pattern: (&keyword.pattern).into(),
+            pattern: (keyword.pattern.as_ref()).into(),
         }
     }
 }
@@ -306,7 +306,7 @@ pub struct ComparableMatchCase<'a> {
 impl<'a> From<&'a ast::MatchCase> for ComparableMatchCase<'a> {
     fn from(match_case: &'a ast::MatchCase) -> Self {
         Self {
-            pattern: (&match_case.pattern).into(),
+            pattern: (match_case.pattern.as_ref()).into(),
             guard: match_case.guard.as_ref().map(Into::into),
             body: match_case.body.iter().map(Into::into).collect(),
         }

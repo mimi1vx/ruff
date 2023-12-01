@@ -32,7 +32,7 @@ pub(crate) fn validate_arguments(arguments: &ast::Parameters) -> Result<(), Lexi
     for arg in posonlyargs
         .chain(args)
         .chain(kwonlyargs)
-        .map(|arg| &arg.parameter)
+        .map(|arg| arg.parameter.as_ref())
         .chain(vararg)
         .chain(kwarg)
     {

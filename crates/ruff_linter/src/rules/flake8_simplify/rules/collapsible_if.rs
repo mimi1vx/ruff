@@ -191,7 +191,7 @@ fn nested_if_body(stmt_if: &ast::StmtIf) -> Option<NestedIf> {
     // depends on the outer of the two conditions
     let (test, nested_if) = if let Some(clause) = elif_else_clauses.last() {
         if let Some(test) = &clause.test {
-            (test, NestedIf::Elif(clause))
+            (test.as_ref(), NestedIf::Elif(clause))
         } else {
             // The last condition is an `else` (different rule)
             return None;

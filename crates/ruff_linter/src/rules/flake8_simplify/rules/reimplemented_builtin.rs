@@ -375,8 +375,8 @@ fn return_stmt(id: &str, test: &Expr, target: &Expr, iter: &Expr, generator: Gen
     let node = ast::ExprGeneratorExp {
         elt: Box::new(test.clone()),
         generators: vec![Comprehension {
-            target: target.clone(),
-            iter: iter.clone(),
+            target: Box::new(target.clone()),
+            iter: Box::new(iter.clone()),
             ifs: vec![],
             is_async: false,
             range: TextRange::default(),

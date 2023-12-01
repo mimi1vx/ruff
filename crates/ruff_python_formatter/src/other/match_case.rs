@@ -32,8 +32,8 @@ impl FormatNodeRule<MatchCase> for FormatMatchCase {
                     &format_with(|f| {
                         write!(f, [token("case"), space()])?;
 
-                        let has_comments = comments.has_leading(pattern)
-                            || comments.has_trailing_own_line(pattern);
+                        let has_comments = comments.has_leading(pattern.as_ref())
+                            || comments.has_trailing_own_line(pattern.as_ref());
 
                         if has_comments {
                             pattern.format().with_options(Parentheses::Always).fmt(f)?;

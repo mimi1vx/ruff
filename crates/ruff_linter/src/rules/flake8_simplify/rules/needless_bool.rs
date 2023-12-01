@@ -75,7 +75,7 @@ pub(crate) fn needless_bool(checker: &mut Checker, stmt_if: &ast::StmtIf) {
             test: None,
             range: else_range,
         }] => (
-            elif_test,
+            elif_test.as_ref(),
             elif_body,
             else_body,
             TextRange::new(elif_range.start(), else_range.end()),
